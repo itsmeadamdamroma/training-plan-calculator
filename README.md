@@ -3,7 +3,7 @@
 A single-file calculator that turns body data into a starting training prescription: BMR, TDEE, calorie target, macros and weekly set volume by experience level.
 
 **Live:** https://decastropt.com/schede.html (the paid, fully personalised version)
-**Paper behind the method:** https://doi.org/10.5281/zenodo.XXXXXXX *(replace once published)*
+**Paper behind the method:** https://doi.org/10.5281/zenodo.23767828
 
 ## What it does
 
