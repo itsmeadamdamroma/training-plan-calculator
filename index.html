@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Training Plan Calculator — BMR, TDEE, macros and starting volume</title>
+<meta name="description" content="Free calculator that turns your body data into a starting training prescription: BMR (Mifflin–St Jeor), TDEE, calorie target, macros and weekly set volume by training experience.">
+<style>
+  :root{--bg:#0b0f14;--panel:#121821;--line:#243040;--ink:#e8eef7;--muted:#93a2b8;--accent:#f97316}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:36px 20px 80px}
+  h1{font-size:clamp(1.6rem,4vw,2.1rem);line-height:1.2;margin:0 0 8px}
+  p.lede{color:var(--muted);margin:0 0 28px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:18px}
+  label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 6px}
+  input,select{width:100%;background:#0e141c;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:10px 12px;font:15px inherit}
+  input:focus,select:focus{outline:none;border-color:var(--accent)}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  button{width:100%;margin-top:16px;background:var(--accent);color:#1a0d02;border:0;border-radius:9px;padding:13px;font:600 15px inherit;cursor:pointer}
+  button:hover{filter:brightness(1.07)}
+  .out{display:none}
+  .out.on{display:block}
+  .row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .row:last-child{border-bottom:0}
+  .row span{color:var(--muted)}
+  .row b{font-variant-numeric:tabular-nums}
+  .big{font-size:1.6rem;color:var(--accent);font-variant-numeric:tabular-nums}
+  .note{font-size:13px;color:var(--muted);margin-top:14px}
+  a{color:var(--accent)}
+  footer{margin-top:26px;font-size:12.5px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Training plan calculator</h1>
+  <p class="lede">Your numbers in, a starting prescription out: BMR, TDEE, calorie target, macros and weekly set volume by experience level. No signup, nothing stored.</p>
+
+  <form id="f" class="panel">
+    <div class="grid">
+      <div><label for="sex">Sex</label>
+        <select id="sex"><option value="m">Male</option><option value="f">Female</option></select></div>
+      <div><label for="age">Age</label><input id="age" type="number" min="14" max="90" value="34"></div>
+      <div><label for="kg">Weight (kg)</label><input id="kg" type="number" min="35" max="220" step="0.1" value="82"></div>
+      <div><label for="cm">Height (cm)</label><input id="cm" type="number" min="130" max="220" value="178"></div>
+      <div><label for="act">Activity</label>
+        <select id="act">
+          <option value="1.2">Sedentary — desk, no training</option>
+          <option value="1.375">Light — 1-3 sessions/week</option>
+          <option value="1.55" selected>Moderate — 3-5 sessions/week</option>
+          <option value="1.725">High — 6-7 sessions/week</option>
+          <option value="1.9">Very high — physical job + daily training</option>
+        </select></div>
+      <div><label for="lvl">Training experience</label>
+        <select id="lvl">
+          <option value="b">Beginner (&lt; 6 months)</option>
+          <option value="i" selected>Intermediate (6-24 months)</option>
+          <option value="a">Advanced (&gt; 24 months)</option>
+        </select></div>
+      <div><label for="goal">Goal</label>
+        <select id="goal">
+          <option value="-0.15">Fat loss (moderate deficit)</option>
+          <option value="0" selected>Maintain / recomposition</option>
+          <option value="0.10">Muscle gain (small surplus)</option>
+        </select></div>
+    </div>
+    <button type="submit">Calculate</button>
+  </form>
+
+  <div id="out" class="panel out">
+    <div class="row"><span>BMR (Mifflin–St Jeor)</span><b id="bmr">—</b></div>
+    <div class="row"><span>TDEE</span><b id="tdee">—</b></div>
+    <div class="row"><span>Calorie target</span><b class="big" id="kcal">—</b></div>
+    <div class="row"><span>Protein</span><b id="p">—</b></div>
+    <div class="row"><span>Fat</span><b id="fat">—</b></div>
+    <div class="row"><span>Carbs</span><b id="carb">—</b></div>
+    <div class="row"><span>Weekly sets per muscle group</span><b id="sets">—</b></div>
+    <div class="row"><span>Suggested sessions per week</span><b id="sess">—</b></div>
+    <p class="note">Protein at 1.8 g/kg, fat at 0.8 g/kg, remaining energy to carbohydrates. Set volume is a population default: adjust with recovery.</p>
+  </div>
+
+  <p class="note">Formulas: Mifflin–St Jeor for BMR, standard activity factors for TDEE, double progression for load. This is a starting point, not a medical prescription — if you have pain or a diagnosed condition, see a clinician first.</p>
+  <footer>Built by <a href="https://decastropt.com/schede.html">Decastro Training Lab</a> · source: <a href="https://decastropt.com">decastropt.com</a></footer>
+</div>
+
+<script>
+document.getElementById('f').addEventListener('submit', function (e) {
+  e.preventDefault();
+  const sex = document.getElementById('sex').value;
+  const age = +document.getElementById('age').value;
+  const kg = +document.getElementById('kg').value;
+  const cm = +document.getElementById('cm').value;
+  const act = +document.getElementById('act').value;
+  const lvl = document.getElementById('lvl').value;
+  const goal = +document.getElementById('goal').value;
+
+  const bmr = 10 * kg + 6.25 * cm - 5 * age + (sex === 'm' ? 5 : -161);
+  const tdee = bmr * act;
+  const kcal = Math.round(tdee * (1 + goal));
+  const protein = Math.round(kg * 1.8);
+  const fat = Math.round(kg * 0.8);
+  const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
+  const sets = lvl === 'b' ? '8-10' : lvl === 'i' ? '12-18' : '16-22';
+  const sess = lvl === 'b' ? '2-3 full body' : lvl === 'i' ? '3-4 upper/lower or PPL' : '4-6 with specialisation';
+
+  document.getElementById('bmr').textContent = Math.round(bmr) + ' kcal';
+  document.getElementById('tdee').textContent = Math.round(tdee) + ' kcal';
+  document.getElementById('kcal').textContent = kcal + ' kcal';
+  document.getElementById('p').textContent = protein + ' g';
+  document.getElementById('fat').textContent = fat + ' g';
+  document.getElementById('carb').textContent = carbs + ' g';
+  document.getElementById('sets').textContent = sets;
+  document.getElementById('sess').textContent = sess;
+  document.getElementById('out').classList.add('on');
+});
+</script>
+</body>
+</html>
